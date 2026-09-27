@@ -15,7 +15,11 @@ let imperative_gen (t: 'a tree) : ('a -> unit) -> unit =
     next := (fun (k: 'a -> unit) ->
       k (inorder_iter t (fun x k1 -> next := (fun k2 -> k2 (k1 ())); x) (fun () -> raise StopIteration)));
     fun k -> !next k
-      
+
+type 'a enum = None | More of 'a * (unit -> 'a enum)
+
+let pure_enum (t: 'a tree) : 'a enum = 
+  inorder_iter t (fun x k -> More (x, k)) (fun () -> None)
 
 let () =
   let root = Node(
@@ -31,4 +35,13 @@ let () =
   g (fun x -> Printf.printf "x2: %d\n" x);
   g (fun x -> Printf.printf "x3: %d\n" x);
   g (fun x -> Printf.printf "x4: %d\n" x);
+  let e = pure_enum root in
+  let rec f (e: int enum) =
+    match e with
+      | None -> ()
+      | More(x, k) ->
+        Printf.printf "%d\n" x;
+        f (k ())
+  in
+  f e
 
